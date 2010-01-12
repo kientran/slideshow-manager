@@ -19,6 +19,7 @@ $data['bannercolor'] = $_POST['bannercolor'];
 $data['active'] = (array_key_exists('active',$_POST)) ? 1 : 0 ;
 
 $rows = $db->update($data,'Panels','ID=?',array($_POST['id']));
+$db->close();
 $sql= "UPDATE Panel SET title='" . $_POST['title'] . 
     "',\n subtitle='" . $data['subtitle'] .
     "',\n photourl='" . $data['photourl'] .
@@ -29,6 +30,5 @@ $sql= "UPDATE Panel SET title='" . $_POST['title'] .
     "'\n WHERE ID=" . $data['id'];
 
 echo $sql;
-$db->close();
 
 ?>

@@ -49,6 +49,7 @@ body {
 #panellist li {
     border:1px solid black;
     padding: 5px;
+    cursor: pointer;
 }
 
 #panellist li.active_0 {

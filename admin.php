@@ -13,13 +13,21 @@
             cursor: 'move',
             update : function() {
                 var order = $('#panellist').sortable('serialize');
-                $('#info').load('process-sortable.php?'+order);
+                $('#info').load('php/process-sortable.php?'+order);
             }
         });
-        $('#panellist li').click(function() {
-            var panelidPrefix = 'panelid_';
-            var panelidNum = this.id.substring(panelidPrefix.length);
-            //$('#info').load('load-panel.php?panelid='+panelidNum);
+        function bindList()
+        {
+            $('#panellist li').click(function() {
+                var panelidPrefix = 'panelid_';
+                var panelidNum = this.id.substring(panelidPrefix.length);
+                loadPanel(panelidNum);
+                        
+            });
+        };
+
+
+        function loadPanel(panelidNum) {
             $.getJSON('php/load-panel.php?panelid='+panelidNum,
                 function(data){
                     loadPreview(data);
@@ -54,8 +62,8 @@
                         $("#active").attr('checked',false);
                     
             });
-            
-        });
+
+        }
 
         function loadPreview(data) {
 
@@ -72,14 +80,70 @@
                     $('#panel-title').attr("class","title "+data['bannercolor']); 
         };
 
+        function loadPanelList() {
+           $.get('php/load-panellist.php',
+                function(data) {
+                    $('#panellist').html(data);
+             }, 'text/html');
+            bindList();
+        };  
+
+
         $('#save').click(function() {
-            var titleVal = $('#title').val();
             $.post('php/save-panel.php',
                 $('#panelinfo').serialize(),
                 function(data){
                 $('#info').text(data);
             });
+            
+            var panelid = $('#panelid').val();
+            var activeval = $('#active').val();
+            var active = '0';
+            if(activeval == 'on')
+                active = '1';
+            
+            $('#panelid_' + panelid).attr('class','active_'+active);
         });
+        
+        $('#copy').click(function() {
+            $.post('php/copy-panel.php',
+                $('#panelinfo').serialize(),
+                function(data){
+                    $('#info').text(data);
+            });
+            loadPanelList();
+        });
+
+        $('#delete').click(function() {
+             var panelidnum = $('#panelid').val();
+            $.get('php/delete-panel.php?id='+panelidnum, function(data) {
+                $('#info').text(data);
+            });
+            loadPanelList(); 
+        });
+        
+
+        //Realtime update of text attributes
+        $('#title, #subtitle').keyup(function () {
+                var titledata = $('#title').val();
+                var subtitledata = $('#subtitle').val();
+                var panelid = $('#panelid').val();
+
+                $('#panel-title').html( titledata +
+                        '<span id="panel-subtitle" class="subtitle">' +
+                    subtitledata + '&raquo; Read More</span>'
+                );
+                $('#panelid_' + panelid).html(titledata);
+        });
+       
+        //Realtime update of banner color 
+        $('input[name=bannercolor]').click(function() {
+             $('#panel-title').attr("class","title "+this.value);
+        });
+        
+        
+        bindList();
+        loadPanel(1);
     });
 
 </script>
@@ -88,31 +152,32 @@
 </head>
 <body>
 
+<div id="main">
+<div id="panelpane">
+
+<ul id="panellist">
 <?php
+    require ('pm-config.php'); 
 
-require ('pm-config.php');
-include ('php/dbFacile.php');
 
+/*include ('php/dbFacile.php');
 $db = dbFacile::open($conf['db']['type'], $conf['db']['name'], $conf['db']['user'] , $conf['db']['password'], $conf['db']['host']);
 
 
 $panels = $db->fetch('SELECT * FROM Panels ORDER BY panelorder');
 
 $db->close();
-?>
 
-<div id="main">
-<div id="panelpane">
-
-<ul id="panellist">
-<?php
 foreach($panels as $panel) {
 
     $listitem = '<li class="active_' . $panel['active'] . '" id="panelid_' . $panel['ID'] . '">'; 
-    $listitem .= $panel['title'] . '<br />';
+    $listitem .= $panel['ID'] . ' ' . $panel['title'];
     $listitem .= '</li>';
     echo $listitem;
 }
+*/
+
+include ('php/load-panellist.php')
 ?>
 
 </ul>
@@ -121,10 +186,10 @@ foreach($panels as $panel) {
 <div id="previewpane">
 <?php	echo <<<SLIDE
     <div class='slide'>
-        <a id='panel-link' href="{$panel['linkurl']}">
-            <img id='panel-photo' src="{$panel['photourl']}" alt="{$panel['photoalt']}" />
-            <span id='panel-title' class="title {$panel['bannercolor']}">{$panel['title']}
-            <span id='panel-subtitle' class="subtitle">{$panel['subtitle']} &raquo; Read More</span></span>
+        <a id='panel-link' href="">
+            <img id='panel-photo' src="" alt="" />
+            <span id='panel-title' class="title ">
+            <span id='panel-subtitle' class="subtitle"> &raquo; Read More</span></span>
         </a>
     </div>
 SLIDE;
